@@ -1,73 +1,96 @@
-// ===============================================================================
-// LOAD DATA
-// We are linking our routes to a series of "data" sources.
-// These data sources hold arrays of information on table-data, waitinglist, etc.
-// ===============================================================================
+//posting to friends having trouble pulling up image
+//set up dependencies and mysql
+var mysql = require("mysql");
+var express = require("express");
+var router = express.Router();
 
-var friendList = require("../data/friendList");
+//connect to MySQL
+var connection;
+if (process.env.JAWSDB_URL) {
+    connection = mysql.createConnection(process.env.JAWSDB_URL);
+} else {
+    connection = mysql.createConnection({
+        host: "localhost",
+        port: 3307,
+        user: "root",
+        password: "root",
+        database: "friends_db"
+    });
+}
 
-
-// ===============================================================================
-// ROUTING
-// ===============================================================================
-
-module.exports = function(app) {
-  // API GET Requests
-  // Below code handles when users "visit" a page.
-  // In each of the below cases when a user visits a link
-  // (ex: localhost:PORT/api/admin... they are shown a JSON of the data in the table)
-  // ---------------------------------------------------------------------------
-
-  app.get("/api/friendList", function(req, res) {
-    res.json(friendList);
-  });
-
-  
-
-  // API POST Requests
-  // Below code handles when a user submits a form and thus submits data to the server.
-  // In each of the below cases, when a user submits form data (a JSON object)
-  // ...the JSON is pushed to the appropriate JavaScript array
-  // (ex. User fills out a reservation request... this data is then sent to the server...
-  // Then the server saves the data to the tableData array)
-  // ---------------------------------------------------------------------------
-
-  app.post("/api/friendList", function(req, res) {
-    //add in user functionality and difference functionality
-    console.log(req.body.scores)
-
-    var user = req.body;
-
-    // parseInt for scores
-    for(var i = 0; i < user.scores.length; i++) {
-      user.scores[i] = parseInt(user.scores[i]);
+connection.connect(function (err) {
+    if (err) {
+        console.error("error connecting: " + err.stack);
+        return;
     }
 
-    // default friend match is the first friend but result will be whoever has the minimum difference in scores
-    var bestFriendIndex = 0;
-    var minimumDifference = 40;
+    console.log("connected as id " + connection.threadId);
+});
 
-    // in this for-loop, start off with a zero difference and compare the user and the ith friend scores, one set at a time
-    //  whatever the difference is, add to the total difference
-    for(var i = 0; i < friendList.length; i++) {
-      var totalDifference = 0;
-      for(var j = 0; j < friendList[i].scores.length; j++) {
-        var difference = Math.abs(user.scores[j] - friends[i].scores[j]);
-        totalDifference += difference;
-      }
+router.get("/api/friends", function (req, res) {
 
-      // if there is a new minimum, change the best friend index and set the new minimum for next iteration comparisons
-      if(totalDifference < minimumDifference) {
-        bestFriendIndex = i;
-        minimumDifference = totalDifference;
-      }
+    connection.query("SELECT * FROM characters", function (err, results) {
+        res.json(results);
+    })
+});
+
+router.post("/api/friends", function (req, res) {
+
+    //converts score to be added into a stringified array in the database
+    var value = "";
+    for (var i = 0; i < req.body.scores.length; i++) {
+        value += req.body.scores[i] + ",";
     }
+    score= "["+ value.slice(0,-1) + "]"
 
-    // after finding match, add user to friend array
-    friendList.push(user);
+    //inserts the object into the SET (the ? is a place holder value)
+    connection.query("INSERT INTO characters SET ?",
+        {
+            name: req.body.name,
+            photo: req.body.photo,
+            scores: score
+        },
+        function (err, results) {
+            if (err) throw err;
+            console.log("New Character added!");
+        }
+    );
 
-    // send back to browser the best friend match
-    res.json(friendList[bestFriendIndex]);
-  
-  });
-};
+    //connects to dataabase and Selects all the current and premade characters
+    connection.query(
+        "SELECT * FROM characters",
+        function (err, results) {
+            if (err) throw err;
+
+            var data = JSON.stringify(results);
+            characters = JSON.parse(data);
+            console.log(friends);
+
+            var currentChar = charcaters[characters.length - 1];
+            var minDiff = 40;
+            var charIndex;
+            
+            //iterates over characters and grabs closest one to your compared score
+            for (let i = 0; i < characters.length - 1; i++) {
+                let diff = compare(currentChar, characters[i]);
+                if (diff < minDiff) {
+                    minDifference = diff;
+                    charIndex = i;
+                }
+            }
+            results.characters[charIndex];
+        });
+});
+
+//sets up difference used to calculate which character your scores are closest to.
+function compare(user, char) {
+    userScores = JSON.parse(user.scores);
+    charScores = JSON.parse(char.scores);
+    var totalDiff = 0;
+    for (let i = 0; i < userScores.length; i++) {
+        totalDiff += Math.abs(userScores[i] - charScores[i]);
+    }
+    return totalDiff;
+}
+
+module.exports = router;
