@@ -1,9 +1,5 @@
-var express = require("express");
+//dependencies
 var path = require("path");
-var router = express.Router();
-
-router.use(express.urlencoded({ extended: true }));
-router.use(express.json());
 
 // A GET Route to /survey which should display the survey page.
 router.get("/survey", function (req, res) {
@@ -14,5 +10,3 @@ router.get("/survey", function (req, res) {
 router.get("*", function (req, res) {
     res.sendFile(path.join(__dirname, "../public/home.html"));
 });
-
-module.exports = router;

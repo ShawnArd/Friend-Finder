@@ -1,4 +1,4 @@
-//posting to friends having trouble pulling up image
+//posting to friends api, but having trouble pulling up image
 //set up dependencies and mysql
 var mysql = require("mysql");
 var express = require("express");
