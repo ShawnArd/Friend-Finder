@@ -66,7 +66,7 @@ router.post("/api/friends", function (req, res) {
             characters = JSON.parse(data);
            
 
-            let currentChar = charcaters[characters.length - 1];
+            let currentChar = characters[characters.length - 1];
             let minDiff = 40;
             let charIndex;
             
