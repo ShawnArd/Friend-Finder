@@ -38,7 +38,7 @@ router.post("/api/friends", function (req, res) {
 
     //converts score to be added into a stringified array in the database
     var value = "";
-    for (var i = 0; i < req.body.scores.length; i++) {
+    for (let i = 0; i < req.body.scores.length; i++) {
         value += req.body.scores[i] + ",";
     }
     score= "["+ value.slice(0,-1) + "]"
@@ -62,13 +62,13 @@ router.post("/api/friends", function (req, res) {
         function (err, results) {
             if (err) throw err;
 
-            var data = JSON.stringify(results);
+            let data = JSON.stringify(results);
             characters = JSON.parse(data);
            
 
-            var currentChar = charcaters[characters.length - 1];
-            var minDiff = 40;
-            var charIndex;
+            let currentChar = charcaters[characters.length - 1];
+            let minDiff = 40;
+            let charIndex;
             
             //iterates over characters and grabs closest one to your compared score
             for (let i = 0; i < characters.length - 1; i++) {
